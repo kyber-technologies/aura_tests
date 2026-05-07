@@ -78,29 +78,6 @@ class ChatTest extends Test<ChannelPermission> {
       );
     }
 
-    final UpdateMessageResponse updateMessageResponse = await group.chat
-        .updateMessage(
-          UpdateMessageRequest(
-            messageId: sendMessageResponse.message.messageId,
-            content: Content(
-              createdAt: Timestamp(millis: Int64()),
-              text: 'Hello World!',
-            ),
-          ),
-          options: group.adminOptions,
-        );
-
-    assert(
-      !updateMessageResponse.hasError(),
-      'Failed to update message: ${updateMessageResponse.error}',
-    );
-
-    assert(
-      updateMessageResponse.message.content.text == 'Hello World!',
-      'Updated message content does not match: '
-      '${updateMessageResponse.message.content}',
-    );
-
     final ReadMessagesResponse readMessagesResponse = await group.chat
         .readMessages(
           ReadMessagesRequest(
@@ -121,8 +98,9 @@ class ChatTest extends Test<ChannelPermission> {
     );
 
     assert(
-      readMessagesResponse.messages.first.content.text == 'Hello World!',
-      'Failed to read first message: ${readMessagesResponse.messages}',
+      readMessagesResponse.messages.first.content.text == 'Hello!',
+      'Failed to read first message: '
+      '${readMessagesResponse.messages.first.content}',
     );
 
     final DeleteMessageResponse deleteMessageResponse = await group.chat

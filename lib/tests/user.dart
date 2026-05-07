@@ -1,15 +1,15 @@
 import 'package:aura_dart/aura_dart.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
+import 'package:grpc/grpc.dart';
 
-final TestGroup userTests =
-    TestGroup('user', 'User relatest tests', <(Test<dynamic>, dynamic)>[
-      (UserTest(), TestUser.admin),
-      (UserTest(), TestUser.supervisor),
-      (UserTest(), TestUser.newUser),
-    ]);
+final TestGroup userTests = TestGroup(
+  'user',
+  'User relatest tests',
+  <(Test<dynamic>, dynamic)>[(UserTest(), ())],
+);
 
-class UserTest extends Test<TestUser> {
+class UserTest extends Test<void> {
   @override
   String get identifier => 'User';
 
@@ -17,111 +17,77 @@ class UserTest extends Test<TestUser> {
   String get description => 'Various operations on users';
 
   @override
-  Future<void> run(TestGroup group, TestUser user) async {
-    final String createUserId = 'user-$user';
+  Future<void> run(TestGroup group, void args) async {
+    const String userId = 'foobar';
+
+    final VerifyEmailResponse verifyEmailResponse = await group.user
+        .verifyEmail(VerifyEmailRequest(email: 'foo@bar.baz'));
+
+    assert(
+      !verifyEmailResponse.hasError(),
+      'Failed to verify email: ${verifyEmailResponse.error}',
+    );
+
+    final GetEmailTokenResponse emailTokenResponse = await group.general
+        .getEmailToken(GetEmailTokenRequest(email: 'foo@bar.baz'));
 
     // Only allowed for admins
     final CreateUserResponse createUserResponse = await group.user.createUser(
       CreateUserRequest(
-        user: User(
-          userId: createUserId,
-          username: 'Foo Bar',
-          email: 'foo@bar.baz',
-          password: '123',
-          role: UserRole.USER_ROLE_USER_UNSPECIFIED,
-          icon: defaultUserIcon,
-        ),
+        userId: userId,
+        username: 'Foo Bar',
+        email: 'foo@bar.baz',
+        password: '123',
+        verificationToken: emailTokenResponse.token,
       ),
-      options: user.options(group),
     );
 
-    if (user == TestUser.admin) {
-      assert(
-        !createUserResponse.hasError(),
-        'Failed to create user: ${createUserResponse.error}',
-      );
-    } else {
-      assert(
-        createUserResponse.hasError() &&
-            createUserResponse.error.code == ErrorCode.ERROR_CODE_UNAUTHORIZED,
-        'Failed to create user: ${createUserResponse.error}',
-      );
-    }
+    assert(
+      !createUserResponse.hasError(),
+      'Failed to create user: ${createUserResponse.error}',
+    );
+
+    final AuthUserResponse authUserResponse = await group.user.authUser(
+      AuthUserRequest(userId: 'foobar', password: '123'),
+    );
+
+    assert(
+      !authUserResponse.hasError(),
+      'Failed to auth user: ${authUserResponse.error}',
+    );
+
+    CallOptions authOpts = authOptions(authUserResponse.token);
 
     // Only allowed for admins
     final UpdateUserResponse updateUserResponse = await group.user.updateUser(
       UpdateUserRequest(
-        user: User(
-          userId: createUserId,
-          username: 'Foo Bar Baz',
-          email: 'foo-bar@baz.com',
-          password: 'abc',
-          role: UserRole.USER_ROLE_SUPERVISOR,
-          icon: ResourceId(namespace: 'test-1', key: 'test-resource-1'),
-        ),
+        username: 'Foo Bar Baz',
+        email: 'foobar@bar.baz',
+        password: 'abc123',
       ),
-      options: user.options(group),
-    );
-
-    if (user == TestUser.admin) {
-      assert(
-        !updateUserResponse.hasError(),
-        'Failed to update user: ${updateUserResponse.error}',
-      );
-    } else {
-      assert(
-        updateUserResponse.hasError() &&
-            updateUserResponse.error.code == ErrorCode.ERROR_CODE_UNAUTHORIZED,
-        'Failed to update user: ${updateUserResponse.error}',
-      );
-    }
-
-    // Not allowed (failed)
-    final AuthUserResponse failedAuthUserResponse = await group.user.authUser(
-      AuthUserRequest(userId: createUserId, password: 'abcde'),
+      options: authOpts,
     );
 
     assert(
-      failedAuthUserResponse.hasError() &&
-          failedAuthUserResponse.error.code ==
-              ErrorCode.ERROR_CODE_UNAUTHORIZED,
-      'Failed authentication not correct: ${failedAuthUserResponse.error}',
+      !updateUserResponse.hasError(),
+      'Failed to update user: ${updateUserResponse.error}',
     );
 
-    // Allowed
-    final AuthUserResponse authUserResponse = await group.user.authUser(
-      AuthUserRequest(userId: createUserId, password: 'abc'),
+    final AuthUserResponse authUserResponse2 = await group.user.authUser(
+      AuthUserRequest(userId: 'foobar', password: 'abc123'),
     );
-
-    if (user == TestUser.admin) {
-      assert(
-        !authUserResponse.hasError(),
-        'Failed to authenticate user: ${authUserResponse.error}',
-      );
-    } else {
-      // Following operations will not succeed,
-      // since only admins can create user.
-      return;
-    }
-
-    // Allowed
-    final UpdateUserAvatarResponse updateUserAvatarResponse = await group.user
-        .updateUserAvatar(
-          UpdateUserAvatarRequest(
-            avatar: ResourceId(namespace: 'test-2', key: 'test-resource-2'),
-          ),
-          options: authOptions(authUserResponse.token),
-        );
 
     assert(
-      !updateUserAvatarResponse.hasError(),
-      'Failed to update user avatar: ${updateUserAvatarResponse.error}',
+      !authUserResponse2.hasError(),
+      'Failed to auth user: ${authUserResponse2.error}',
     );
+
+    authOpts = authOptions(authUserResponse2.token);
 
     // Allowed
     final GetUserResponse getUserResponse = await group.user.getUser(
-      GetUserRequest(userId: createUserId),
-      options: user.options(group),
+      GetUserRequest(userId: userId),
+      options: authOpts,
     );
 
     assert(
@@ -131,15 +97,12 @@ class UserTest extends Test<TestUser> {
 
     assert(
       getUserResponse.user.username == 'Foo Bar Baz',
-      'Got wrong user: ${getUserResponse.user}',
+      'Got wrong user: ${getUserResponse.user.username}',
     );
 
     // Allowed
     final SearchUsersResponse searchUsersResponse = await group.user
-        .searchUsers(
-          SearchUsersRequest(query: 'Foo Bar'),
-          options: authOptions(authUserResponse.token),
-        );
+        .searchUsers(SearchUsersRequest(query: 'Foo Bar'), options: authOpts);
 
     assert(
       !searchUsersResponse.hasError(),
@@ -151,10 +114,21 @@ class UserTest extends Test<TestUser> {
       'Got wrong user: ${searchUsersResponse.users[0]}',
     );
 
-    // Only allowed for admins
+    // Not allowed
+    final DeleteUserResponse failDeleteUserResponse = await group.user
+        .deleteUser(DeleteUserRequest(password: '123'), options: authOpts);
+
+    assert(
+      failDeleteUserResponse.hasError() &&
+          failDeleteUserResponse.error.code ==
+              ErrorCode.ERROR_CODE_UNAUTHORIZED,
+      'Failed to delete user: ${failDeleteUserResponse.error}',
+    );
+
+    // Allowed
     final DeleteUserResponse deleteUserResponse = await group.user.deleteUser(
-      DeleteUserRequest(userId: createUserId),
-      options: user.options(group),
+      DeleteUserRequest(password: 'abc123'),
+      options: authOpts,
     );
 
     assert(
