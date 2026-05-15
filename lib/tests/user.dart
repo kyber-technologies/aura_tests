@@ -24,8 +24,8 @@ class UserTest extends Test<void> {
         .verifyEmail(VerifyEmailRequest(email: 'foo@bar.baz'));
 
     assert(
-      !verifyEmailResponse.hasError(),
-      'Failed to verify email: ${verifyEmailResponse.error}',
+    !verifyEmailResponse.hasError(),
+    'Failed to verify email: ${verifyEmailResponse.error}',
     );
 
     final GetEmailTokenResponse emailTokenResponse = await group.general
@@ -43,8 +43,8 @@ class UserTest extends Test<void> {
     );
 
     assert(
-      !createUserResponse.hasError(),
-      'Failed to create user: ${createUserResponse.error}',
+    !createUserResponse.hasError(),
+    'Failed to create user: ${createUserResponse.error}',
     );
 
     final AuthUserResponse authUserResponse = await group.user.authUser(
@@ -52,8 +52,8 @@ class UserTest extends Test<void> {
     );
 
     assert(
-      !authUserResponse.hasError(),
-      'Failed to auth user: ${authUserResponse.error}',
+    !authUserResponse.hasError(),
+    'Failed to auth user: ${authUserResponse.error}',
     );
 
     CallOptions authOpts = authOptions(authUserResponse.token);
@@ -69,8 +69,8 @@ class UserTest extends Test<void> {
     );
 
     assert(
-      !updateUserResponse.hasError(),
-      'Failed to update user: ${updateUserResponse.error}',
+    !updateUserResponse.hasError(),
+    'Failed to update user: ${updateUserResponse.error}',
     );
 
     final AuthUserResponse authUserResponse2 = await group.user.authUser(
@@ -78,11 +78,55 @@ class UserTest extends Test<void> {
     );
 
     assert(
-      !authUserResponse2.hasError(),
-      'Failed to auth user: ${authUserResponse2.error}',
+    !authUserResponse2.hasError(),
+    'Failed to auth user: ${authUserResponse2.error}',
     );
 
     authOpts = authOptions(authUserResponse2.token);
+
+    final BlockUserResponse blockUserRequest = await group.user.blockUser(
+      BlockUserRequest(userId: TestUser.newUser.userId, block: true),
+      options: authOpts,
+    );
+
+    assert(
+    !blockUserRequest.hasError(),
+    'Failed to block user: ${blockUserRequest.error}',
+    );
+
+    final IsBlockedResponse isBlockedRequest = await group.user.isBlocked(
+      IsBlockedRequest(userId: TestUser.newUser.userId),
+      options: authOpts,
+    );
+
+    assert(
+    !isBlockedRequest.hasError(),
+    'Failed to check if user is blocked: ${isBlockedRequest.error}',
+    );
+
+    assert(isBlockedRequest.blocked, 'User is not blocked');
+
+    final BlockUserResponse blockUserRequest2 = await group.user.blockUser(
+      BlockUserRequest(userId: TestUser.newUser.userId, block: false),
+      options: authOpts,
+    );
+
+    assert(
+    !blockUserRequest2.hasError(),
+    'Failed to block user: ${blockUserRequest2.error}',
+    );
+
+    final IsBlockedResponse isBlockedRequest2 = await group.user.isBlocked(
+      IsBlockedRequest(userId: TestUser.newUser.userId),
+      options: authOpts,
+    );
+
+    assert(
+    !isBlockedRequest2.hasError(),
+    'Failed to check if user is blocked: ${isBlockedRequest2.error}',
+    );
+
+    assert(!isBlockedRequest2.blocked, 'User is blocked');
 
     // Allowed
     final GetUserResponse getUserResponse = await group.user.getUser(
@@ -91,13 +135,13 @@ class UserTest extends Test<void> {
     );
 
     assert(
-      !getUserResponse.hasError(),
-      'Failed to get user: ${getUserResponse.error}',
+    !getUserResponse.hasError(),
+    'Failed to get user: ${getUserResponse.error}',
     );
 
     assert(
-      getUserResponse.user.username == 'Foo Bar Baz',
-      'Got wrong user: ${getUserResponse.user.username}',
+    getUserResponse.user.username == 'Foo Bar Baz',
+    'Got wrong user: ${getUserResponse.user.username}',
     );
 
     // Allowed
@@ -105,13 +149,13 @@ class UserTest extends Test<void> {
         .searchUsers(SearchUsersRequest(query: 'Foo Bar'), options: authOpts);
 
     assert(
-      !searchUsersResponse.hasError(),
-      'Failed to search users: ${searchUsersResponse.error}',
+    !searchUsersResponse.hasError(),
+    'Failed to search users: ${searchUsersResponse.error}',
     );
 
     assert(
-      searchUsersResponse.users[0].username == 'Foo Bar Baz',
-      'Got wrong user: ${searchUsersResponse.users[0]}',
+    searchUsersResponse.users[0].username == 'Foo Bar Baz',
+    'Got wrong user: ${searchUsersResponse.users[0]}',
     );
 
     // Not allowed
@@ -119,10 +163,10 @@ class UserTest extends Test<void> {
         .deleteUser(DeleteUserRequest(password: '123'), options: authOpts);
 
     assert(
-      failDeleteUserResponse.hasError() &&
-          failDeleteUserResponse.error.code ==
-              ErrorCode.ERROR_CODE_UNAUTHORIZED,
-      'Failed to delete user: ${failDeleteUserResponse.error}',
+    failDeleteUserResponse.hasError() &&
+        failDeleteUserResponse.error.code ==
+            ErrorCode.ERROR_CODE_UNAUTHORIZED,
+    'Failed to delete user: ${failDeleteUserResponse.error}',
     );
 
     // Allowed
@@ -132,8 +176,8 @@ class UserTest extends Test<void> {
     );
 
     assert(
-      !deleteUserResponse.hasError(),
-      'Failed to delete user: ${deleteUserResponse.error}',
+    !deleteUserResponse.hasError(),
+    'Failed to delete user: ${deleteUserResponse.error}',
     );
   }
 }

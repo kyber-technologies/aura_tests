@@ -38,7 +38,7 @@ packages:
     description:
       path: aura_dart
       ref: HEAD
-      resolved-ref: "8f3af560d544b0e312107dcf38828683aec84f18"
+      resolved-ref: f8296f6737fd567ef97bd2b74278946c97812086
       url: "https://github.com/kyber-technologies/aura_proto.git"
     source: git
     version: "1.0.0"
@@ -134,10 +134,10 @@ packages:
     dependency: transitive
     description:
       name: google_cloud
-      sha256: fbcde933b2d8600c3cdb2328f8f4c47628ec29a39e9cef85dee535c7868993c4
+      sha256: b385e20726ef5315d302c5933bfb728103116c5be2d3d17094b01a82da538c1f
       url: "https://pub.dev"
     source: hosted
-    version: "0.4.1"
+    version: "0.5.0"
   google_identity_services_web:
     dependency: transitive
     description:
@@ -150,10 +150,10 @@ packages:
     dependency: transitive
     description:
       name: googleapis_auth
-      sha256: "661738b763d3e524de69df53bf4e03943e4e01e98265cebcc6684871b06a5379"
+      sha256: "2a8895c3885197f96bb2fd91ee0ae77b53ff3874c7b1f1eadb6566248e880958"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.0"
+    version: "2.3.1"
   grpc:
     dependency: "direct main"
     description:
