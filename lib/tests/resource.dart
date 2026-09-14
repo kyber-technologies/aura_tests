@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:aura_dart/aura_dart.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
-import 'package:fixnum/fixnum.dart';
 import 'package:grpc/src/client/common.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 // 5 MiB of Data
 const int _resourceSize = 1024 * 1024 * 5;
@@ -85,7 +85,7 @@ class ResourceTest extends Test<ChannelPermission> {
         description: 'Some channel',
         members: <MapEntry<String, ChannelPermission>>[
           MapEntry<String, ChannelPermission>(TestUser.admin.userId, perm),
-          MapEntry<String, ChannelPermission>(TestUser.supervisor.userId, perm),
+          MapEntry<String, ChannelPermission>(TestUser.moderator.userId, perm),
           MapEntry<String, ChannelPermission>(TestUser.newUser.userId, perm),
         ],
       ),
@@ -124,7 +124,7 @@ class ResourceTest extends Test<ChannelPermission> {
             meta: ResourceMeta(
               size: _resourceSize,
               // Gets fixed by server internally
-              timestamp: Timestamp(millis: Int64.parseInt('0')),
+              timestamp: Timestamp(),
               metadata: <MapEntry<String, String>>[],
             ),
           ),
@@ -148,4 +148,11 @@ class ResourceTest extends Test<ChannelPermission> {
       'Failed to upload resource: ${uploadResponse.error}',
     );
   }
+
+  @override
+  Set<String> get coveredMethods => <String>{
+    'ResourceService/GetResourceMeta',
+    'ResourceService/Download',
+    'ResourceService/Upload',
+  };
 }

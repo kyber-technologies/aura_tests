@@ -3,8 +3,8 @@ import 'package:grpc/grpc.dart';
 
 const String adminUserId = 'admin';
 const String adminPassword = 'admin';
-const String supervisorUserId = 'supervisor';
-const String supervisorPassword = 'supervisor';
+const String moderatorUserId = 'moderator';
+const String moderatorPassword = 'moderator';
 const String newUserUserId = 'user';
 const String newUserPassword = 'user';
 
@@ -20,15 +20,15 @@ class UserAuth {
 
 enum TestUser {
   admin,
-  supervisor,
+  moderator,
   newUser;
 
   String get userId {
     switch (this) {
       case TestUser.admin:
         return adminUserId;
-      case TestUser.supervisor:
-        return supervisorUserId;
+      case TestUser.moderator:
+        return moderatorUserId;
       case TestUser.newUser:
         return newUserUserId;
     }
@@ -38,8 +38,8 @@ enum TestUser {
     switch (this) {
       case TestUser.admin:
         return group.adminOptions;
-      case TestUser.supervisor:
-        return group.supervisorOptions;
+      case TestUser.moderator:
+        return group.moderatorOptions;
       case TestUser.newUser:
         return group.newUserOptions;
     }

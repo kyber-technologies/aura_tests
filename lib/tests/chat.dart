@@ -1,7 +1,7 @@
 import 'package:aura_dart/aura_dart.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
-import 'package:fixnum/fixnum.dart';
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 final TestGroup chatTests =
     TestGroup('chat', 'Chat relatest tests', <(Test<dynamic>, dynamic)>[
@@ -26,7 +26,7 @@ class ChatTest extends Test<ChannelPermission> {
         description: 'Some channel',
         members: <MapEntry<String, ChannelPermission>>[
           MapEntry<String, ChannelPermission>(TestUser.admin.userId, perm),
-          MapEntry<String, ChannelPermission>(TestUser.supervisor.userId, perm),
+          MapEntry<String, ChannelPermission>(TestUser.moderator.userId, perm),
           MapEntry<String, ChannelPermission>(TestUser.newUser.userId, perm),
         ],
       ),
@@ -47,10 +47,7 @@ class ChatTest extends Test<ChannelPermission> {
         .sendMessage(
           SendMessageRequest(
             channelId: createChannelResponse.channel.channelId,
-            content: Content(
-              createdAt: Timestamp(millis: Int64()),
-              text: 'Hello!',
-            ),
+            content: Content(text: 'Hello!'),
           ),
           options: group.adminOptions,
         );
@@ -59,7 +56,7 @@ class ChatTest extends Test<ChannelPermission> {
       assert(
         sendMessageResponse.hasError() &&
             sendMessageResponse.error.code == ErrorCode.ERROR_CODE_UNAUTHORIZED,
-        'Failed to send message: ${sendMessageResponse.error}',
+        'Succeeded in sending message: ${sendMessageResponse.error}',
       );
 
       // Following operations are only valid if the message was actually created
@@ -83,11 +80,7 @@ class ChatTest extends Test<ChannelPermission> {
           ReadMessagesRequest(
             channelId: createChannelResponse.channel.channelId,
             limit: 10,
-            startTime: Timestamp(
-              millis: Int64.parseInt(
-                DateTime.now().millisecondsSinceEpoch.toString(),
-              ),
-            ),
+            startTime: Timestamp.fromDateTime(DateTime.now()),
           ),
           options: group.adminOptions,
         );
@@ -121,11 +114,7 @@ class ChatTest extends Test<ChannelPermission> {
           ReadMessagesRequest(
             channelId: createChannelResponse.channel.channelId,
             limit: 10,
-            startTime: Timestamp(
-              millis: Int64.parseInt(
-                DateTime.now().millisecondsSinceEpoch.toString(),
-              ),
-            ),
+            startTime: Timestamp.fromDateTime(DateTime.now()),
           ),
           options: group.adminOptions,
         );
@@ -140,4 +129,12 @@ class ChatTest extends Test<ChannelPermission> {
       'Messages not empty after deletion',
     );
   }
+
+  @override
+  Set<String> get coveredMethods => <String>{
+    'ChatService/CreateChannel',
+    'ChatService/SendMessage',
+    'ChatService/ReadMessages',
+    'ChatService/DeleteMessage',
+  };
 }

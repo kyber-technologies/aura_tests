@@ -17,6 +17,8 @@ final Logger logger = Logger(
 
 final Map<String, TestGroup> groups = <String, TestGroup>{};
 
+final Set<String> registeredMethods = <String>{};
+
 void registerGroup(TestGroup group) => groups[group.name] = group;
 
 class TestGroup {
@@ -30,7 +32,7 @@ class TestGroup {
   late final GetConfigResponse config;
 
   late final CallOptions adminOptions;
-  late final CallOptions supervisorOptions;
+  late final CallOptions moderatorOptions;
   late final CallOptions newUserOptions;
 
   final String name;
@@ -39,19 +41,21 @@ class TestGroup {
 
   TestGroup(this.name, this.description, this.tests);
 
-  Future<List<(String, bool)>> run() async {
-    final List<(String, bool)> results = <(String, bool)>[];
+  Future<List<(String, bool, Set<String>)>> run() async {
+    final List<(String, bool, Set<String>)> results =
+        <(String, bool, Set<String>)>[];
 
     for (final (Test<dynamic> test, dynamic args) in tests) {
       final String name = test.getName(args);
+
       try {
         logger.i("Running '$name'...");
         await test.run(this, args);
 
-        results.add((name, true));
+        results.add((name, true, test.coveredMethods));
       } on Object catch (e) {
         logger.e("Test '$name' failed: $e");
-        results.add((name, false));
+        results.add((name, false, test.coveredMethods));
       }
     }
 
@@ -88,51 +92,6 @@ class TestGroup {
     logger.d('Clearing server state...');
     await general.clearState(ClearStateRequest());
 
-    logger.d('Authenticating as admin...');
-    {
-      final AuthUserResponse adminResponse = await user.authUser(
-        AuthUserRequest(userId: adminUserId, password: adminPassword),
-      );
-
-      if (adminResponse.hasError()) {
-        throw Exception(
-          'Failed to authenticate test admin: ${adminResponse.error}',
-        );
-      }
-
-      adminOptions = authOptions(adminResponse.token);
-    }
-
-    logger.d('Authenticating as supervisor...');
-    {
-      final AuthUserResponse superResponse = await user.authUser(
-        AuthUserRequest(userId: supervisorUserId, password: supervisorPassword),
-      );
-
-      if (superResponse.hasError()) {
-        throw Exception(
-          'Failed to authenticate test supervisor: ${superResponse.error}',
-        );
-      }
-
-      supervisorOptions = authOptions(superResponse.token);
-    }
-
-    logger.d('Authenticating as user...');
-    {
-      final AuthUserResponse userResponse = await user.authUser(
-        AuthUserRequest(userId: newUserUserId, password: newUserPassword),
-      );
-
-      if (userResponse.hasError()) {
-        throw Exception(
-          'Failed to authenticate test user: ${userResponse.error}',
-        );
-      }
-
-      newUserOptions = authOptions(userResponse.token);
-    }
-
     logger.d('Validating configuration...');
     {
       final GetConfigResponse config = await general.getConfig(
@@ -145,6 +104,61 @@ class TestGroup {
       );
 
       this.config = config;
+    }
+
+    if (registeredMethods.isEmpty) {
+      logger.d('Fetching registered methods...');
+
+      final GetServicesResponse response = await general.getServices(
+        GetServicesRequest(),
+      );
+
+      for (final ServiceDescriptor service in response.services) {
+        for (final String method in service.methods) {
+          registeredMethods.add('${service.name}/$method');
+        }
+      }
+    }
+
+    logger.d('Authenticating as admin...');
+    {
+      final AuthUserResponse response = await user.authUser(
+        AuthUserRequest(userId: adminUserId, password: adminPassword),
+      );
+
+      if (response.hasError()) {
+        throw Exception('Failed to authenticate test admin: ${response.error}');
+      }
+
+      adminOptions = authOptions(response.token);
+    }
+
+    logger.d('Authenticating as moderator...');
+    {
+      final AuthUserResponse response = await user.authUser(
+        AuthUserRequest(userId: moderatorUserId, password: moderatorPassword),
+      );
+
+      if (response.hasError()) {
+        throw Exception(
+          'Failed to authenticate test supervisor: ${response.error}',
+        );
+      }
+
+      moderatorOptions = authOptions(response.token);
+    }
+
+    logger.d('Authenticating as user...');
+    {
+      final AuthUserResponse response = await user.authUser(
+        AuthUserRequest(userId: newUserUserId, password: newUserPassword),
+      );
+
+      if (response.hasError()) {
+        throw Exception('Failed to authenticate test user: ${response.error}');
+      }
+
+      newUserOptions = authOptions(response.token);
     }
   }
 
@@ -159,6 +173,8 @@ abstract class Test<A> {
   String get identifier;
 
   String get description;
+
+  Set<String> get coveredMethods;
 
   Future<void> run(TestGroup group, A args);
 }

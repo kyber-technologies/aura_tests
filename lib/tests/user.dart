@@ -20,6 +20,17 @@ class UserTest extends Test<void> {
   Future<void> run(TestGroup group, void args) async {
     const String userId = 'foobar';
 
+    // User does not exist yet
+    final UserExistsResponse failExistsResponse = await group.user.userExists(
+      UserExistsRequest(userId: userId),
+    );
+
+    assert(
+      failExistsResponse.hasError() &&
+          failExistsResponse.error.code == ErrorCode.ERROR_CODE_NOT_FOUND,
+      'Succeeded in checking user existence: $failExistsResponse',
+    );
+
     final VerifyEmailResponse verifyEmailResponse = await group.user
         .verifyEmail(VerifyEmailRequest(email: 'foo@bar.baz'));
 
@@ -45,6 +56,15 @@ class UserTest extends Test<void> {
     assert(
       !createUserResponse.hasError(),
       'Failed to create user: ${createUserResponse.error}',
+    );
+
+    final UserExistsResponse existsResponse = await group.user.userExists(
+      UserExistsRequest(userId: userId),
+    );
+
+    assert(
+      !existsResponse.hasError(),
+      'Failed to check user existence: ${existsResponse.error}',
     );
 
     final AuthUserResponse authUserResponse = await group.user.authUser(
@@ -166,7 +186,7 @@ class UserTest extends Test<void> {
       failDeleteUserResponse.hasError() &&
           failDeleteUserResponse.error.code ==
               ErrorCode.ERROR_CODE_UNAUTHORIZED,
-      'Failed to delete user: ${failDeleteUserResponse.error}',
+      'Succeeded in deleting user: ${failDeleteUserResponse.error}',
     );
 
     // Allowed
@@ -180,4 +200,18 @@ class UserTest extends Test<void> {
       'Failed to delete user: ${deleteUserResponse.error}',
     );
   }
+
+  @override
+  Set<String> get coveredMethods => <String>{
+    'UserService/VerifyEmail',
+    'UserService/CreateUser',
+    'UserService/UserExists',
+    'UserService/UpdateUser',
+    'UserService/AuthUser',
+    'UserService/BlockUser',
+    'UserService/IsBlocked',
+    'UserService/GetUser',
+    'UserService/SearchUsers',
+    'UserService/DeleteUser',
+  };
 }
