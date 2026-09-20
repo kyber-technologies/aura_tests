@@ -1,23 +1,23 @@
 # Aura Testing Suite
 
-**Testing suite for the Aura gRPC service**
+An extended testing suite for the Aura network.
 
-## Introduction
+## Prerequisites
 
-Due to the complex nature of the Aura gRPC service,
-this test suite was created in order to test service functionality.
+You will need [Dart](https://dart.dev) for running the tests and a running Aura Server,
+as well as a running mailhog instance and a PostgreSQL database.
 
-## Setup
+Note that the server must be in testing mode (run via `--features testing` or `dev/run-testing.sh`).
 
-In order for the tests to even work, you need a running Elysium gRPC Service with the `testing` feature.
+## Usage
 
-You can do this by running `cargo run --features testing` inside
-the [aura_server](https://github.com/kyber-technologies/aura_server) repository.
+You can use the `test.sh` or `test.bat` scripts to run tests.
 
-## Running Tests
+**Commands:**
 
-You can run tests via the `run.bat` or `run.sh` scripts and specify arguments.
+- `help` - To get help about the CLI.
+- `list` - To list all available tests.
+- `all` - To run all tests.
+- `<test>` - To run a specific test.
 
-The testing suite contains multiple testing groups you can run by specifying the group name as the first argument.
-
-Run `run list` for a list of groups and `run user` for example to run the user test group.
+The testing suite will automatically collect results and method coverage.

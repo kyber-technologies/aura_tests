@@ -15,13 +15,13 @@ final Logger logger = Logger(
       : Level.info,
 );
 
-final Map<String, TestGroup> groups = <String, TestGroup>{};
+final Map<String, Test> tests = <String, Test>{};
 
 final Set<String> registeredMethods = <String>{};
 
-void registerGroup(TestGroup group) => groups[group.name] = group;
+void registerTest(Test test) => tests[test.name] = test;
 
-class TestGroup {
+class TestContext {
   late final String version;
 
   late final ClientChannel channel;
@@ -31,36 +31,14 @@ class TestGroup {
   late final ResourceServiceClient resource;
   late final GetConfigResponse config;
 
+  late final User testUser;
+  late final CallOptions testUserOptions;
+
+  late final User admin;
   late final CallOptions adminOptions;
+
+  late final User moderator;
   late final CallOptions moderatorOptions;
-  late final CallOptions newUserOptions;
-
-  final String name;
-  final String description;
-  final List<(Test<dynamic>, dynamic)> tests;
-
-  TestGroup(this.name, this.description, this.tests);
-
-  Future<List<(String, bool, Set<String>)>> run() async {
-    final List<(String, bool, Set<String>)> results =
-        <(String, bool, Set<String>)>[];
-
-    for (final (Test<dynamic> test, dynamic args) in tests) {
-      final String name = test.getName(args);
-
-      try {
-        logger.i("Running '$name'...");
-        await test.run(this, args);
-
-        results.add((name, true, test.coveredMethods));
-      } on Object catch (e) {
-        logger.e("Test '$name' failed: $e");
-        results.add((name, false, test.coveredMethods));
-      }
-    }
-
-    return results;
-  }
 
   Future<void> init() async {
     logger.d('Getting package version...');
@@ -120,45 +98,54 @@ class TestGroup {
       }
     }
 
-    logger.d('Authenticating as admin...');
+    logger.d('Requesting test user data...');
     {
-      final AuthUserResponse response = await user.authUser(
-        AuthUserRequest(userId: adminUserId, password: adminPassword),
+      final GetTestUsersResponse testUsers = await general.getTestUsers(
+        GetTestUsersRequest(),
       );
 
-      if (response.hasError()) {
-        throw Exception('Failed to authenticate test admin: ${response.error}');
-      }
-
-      adminOptions = authOptions(response.token);
+      admin = testUsers.admin;
+      moderator = testUsers.moderator;
+      testUser = testUsers.user;
     }
 
-    logger.d('Authenticating as moderator...');
+    logger.d('Authenticating as test user...');
     {
       final AuthUserResponse response = await user.authUser(
-        AuthUserRequest(userId: moderatorUserId, password: moderatorPassword),
-      );
-
-      if (response.hasError()) {
-        throw Exception(
-          'Failed to authenticate test supervisor: ${response.error}',
-        );
-      }
-
-      moderatorOptions = authOptions(response.token);
-    }
-
-    logger.d('Authenticating as user...');
-    {
-      final AuthUserResponse response = await user.authUser(
-        AuthUserRequest(userId: newUserUserId, password: newUserPassword),
+        AuthUserRequest(userId: testUser.userId, password: testUser.password),
       );
 
       if (response.hasError()) {
         throw Exception('Failed to authenticate test user: ${response.error}');
       }
 
-      newUserOptions = authOptions(response.token);
+      testUserOptions = authOptions(response.token);
+    }
+
+    logger.d('Authenticating as moderator...');
+    {
+      final AuthUserResponse response = await user.authUser(
+        AuthUserRequest(userId: moderator.userId, password: moderator.password),
+      );
+
+      if (response.hasError()) {
+        throw Exception('Failed to authenticate moderator: ${response.error}');
+      }
+
+      moderatorOptions = authOptions(response.token);
+    }
+
+    logger.d('Authenticating as admin...');
+    {
+      final AuthUserResponse response = await user.authUser(
+        AuthUserRequest(userId: admin.userId, password: admin.password),
+      );
+
+      if (response.hasError()) {
+        throw Exception('Failed to authenticate admin: ${response.error}');
+      }
+
+      adminOptions = authOptions(response.token);
     }
   }
 
@@ -167,14 +154,12 @@ class TestGroup {
   }
 }
 
-abstract class Test<A> {
-  String getName(A args) => '$identifier - $args';
-
-  String get identifier;
+abstract class Test {
+  String get name;
 
   String get description;
 
   Set<String> get coveredMethods;
 
-  Future<void> run(TestGroup group, A args);
+  Future<void> run(TestContext context);
 }

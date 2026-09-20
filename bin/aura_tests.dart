@@ -1,88 +1,83 @@
+import 'package:aura_dart/aura_dart.dart';
 import 'package:aura_tests/library.dart';
-import 'package:aura_tests/tests/chat.dart';
-import 'package:aura_tests/tests/resource.dart';
-import 'package:aura_tests/tests/user.dart';
+import 'package:aura_tests/tests/channels.dart';
+import 'package:aura_tests/tests/messages.dart';
+import 'package:aura_tests/tests/resources.dart';
+import 'package:aura_tests/tests/users.dart';
 
 void main(List<String> args) async {
-  registerAll();
+  registerTest(UsersTest());
+  registerTest(ResourcesTest());
+  registerTest(ChannelsTest());
+  registerTest(MessagesTest());
 
   final String? command = args.firstOrNull;
 
-  final List<(String, bool, Set<String>)> results =
-      <(String, bool, Set<String>)>[];
+  final List<(Test, bool)> results = <(Test, bool)>[];
 
   if (command == null) {
     logger.e('Please provide a subcommand.');
     return;
   }
 
+  final TestContext context = TestContext();
+
+  logger.i('Initializing test context...');
+  await context.init();
+
   switch (command) {
     case 'all':
-      for (final TestGroup test in groups.values) {
-        final List<(String, bool, Set<String>)> testResults =
-            await runTestGroup(test.name);
+      for (final Test test in tests.values) {
+        final (Test, bool) result = await runTest(context, test.name);
 
-        results.addAll(testResults);
+        results.add(result);
       }
     case 'list':
       logger.i('Listing available tests...');
 
-      for (final TestGroup group in groups.values) {
-        print('"${group.name}" - ${group.description}');
-
-        for (final (Test<dynamic> test, dynamic args) in group.tests) {
-          print('   "${test.getName(args)}" - ${test.description}');
-        }
+      for (final Test test in tests.values) {
+        print('"${test.name}" - ${test.description}');
       }
     case 'help':
       print('aura_tests - Aura Server Testing Suite');
       print('Available commands:');
-      print('  - <name>: Run a specific test group.');
+      print('  - <name>: Run a specific test.');
       print('  - all: Run all tests.');
       print('  - list: List available tests.');
       print('  - help: Show this help message.');
     default:
-      final List<(String, bool, Set<String>)> testResults = await runTestGroup(
-        command,
-      );
-      results.addAll(testResults);
+      final (Test, bool) result = await runTest(context, command);
+      results.add(result);
   }
+
+  await context.dispose();
 
   if (results.isNotEmpty) {
     printResults(results, command == 'all');
   }
 }
 
-void registerAll() {
-  registerGroup(userTests);
-  registerGroup(chatTests);
-  registerGroup(resourceTests);
-}
+Future<(Test, bool)> runTest(TestContext context, String name) async {
+  final Test? test = tests[name];
 
-Future<List<(String, bool, Set<String>)>> runTestGroup(String name) async {
-  final TestGroup? group = groups[name];
-
-  if (group == null) {
+  if (test == null) {
     throw Exception(
-      "Test group $name not found! Use 'list' to list available tests groups.",
+      "Test $name not found! Use 'list' to list available tests.",
     );
   } else {
-    logger.i('Initializing test group ${group.name}...');
+    await context.general.clearState(ClearStateRequest());
 
-    await group.init();
-
-    final List<(String, bool, Set<String>)> results = await group.run();
-
-    await group.dispose();
-
-    return results;
+    try {
+      await test.run(context);
+      return (test, true);
+    } on Exception catch (error) {
+      logger.e("Test '${test.name}' failed: ${error}");
+      return (test, false);
+    }
   }
 }
 
-void printResults(
-  final List<(String, bool, Set<String>)> results,
-  final bool all,
-) {
+void printResults(final List<(Test, bool)> results, final bool all) {
   final Set<String> coveredMethods = <String>{};
 
   int passed = 0;
@@ -90,14 +85,14 @@ void printResults(
 
   logger.i('########## RESULTS ##########');
 
-  for (final (String name, bool result, Set<String> methods) in results) {
-    coveredMethods.addAll(methods);
+  for (final (Test test, bool result) in results) {
+    coveredMethods.addAll(test.coveredMethods);
 
     if (result) {
-      logger.i("Test '$name' passed");
+      logger.i("Test '${test.name}' passed");
       passed++;
     } else {
-      logger.e("Test '$name' failed");
+      logger.e("Test '${test.name}' failed");
       failed++;
     }
   }
@@ -131,6 +126,7 @@ void printResults(
           'GeneralService/ClearState',
           'GeneralService/GetEmailToken',
           'GeneralService/GetServices',
+          'GeneralService/GetTestUsers',
         ]);
 
     if (uncoveredMethods.isEmpty) {
@@ -141,5 +137,7 @@ void printResults(
         print('   - $method');
       }
     }
+  } else {
+    logger.i("Run 'all' tests to get method coverage data.");
   }
 }
