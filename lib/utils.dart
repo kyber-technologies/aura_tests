@@ -1,9 +1,15 @@
-import 'package:aura_dart/aura_dart.dart';
+import 'dart:math';
+
+import 'package:aura_dart/chat.dart' as ch;
+import 'package:aura_dart/common.dart';
+import 'package:aura_dart/posting.dart' as ps;
+import 'package:aura_dart/resource.dart' as res;
+import 'package:aura_dart/user.dart' as us;
 import 'package:grpc/grpc.dart';
 import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
 
-final ResourceId defaultIconResource = ResourceId(
-  namespace: ResourceNamespace(aura: Empty()),
+final res.ResourceId defaultIconResource = res.ResourceId(
+  namespace: res.ResourceNamespace(aura: Empty()),
   key: 'default_icon.png',
 );
 
@@ -11,18 +17,22 @@ CallOptions authOptions(String token) =>
     CallOptions(metadata: <String, String>{'Authorization': token});
 
 void assertList<T>(List<T> a, List<T> b) {
-  final bool equal = a.indexed.every(((int, T) item) => item.$2 == b[item.$1]);
+  final bool sameLength = a.length == b.length;
+  final bool equalContent =
+      sameLength && a.indexed.every(((int, T) item) => item.$2 == b[item.$1]);
 
-  assert(equal, '''
-Expected length: ${a.length} 
-Actual length: ${b.length} 
-      
-Expected first 20: ${a.take(20).toList()} 
-Actual first 20: ${b.take(20).toList()} 
-      
-Expected last 20: ${a.skip(a.length - 20).toList()} 
-Actual last 20: ${b.skip(b.length - 20).toList()}
-    ''');
+  final bool isEqual = sameLength && equalContent;
+
+  assert(isEqual, '''
+Expected length: ${a.length}
+Actual length: ${b.length}
+
+Expected first 20: ${a.take(20).toList()}
+Actual first 20: ${b.take(20).toList()}
+
+Expected last 20: ${a.skip(max(0, a.length - 20)).toList()}
+Actual last 20: ${b.skip(max(0, b.length - 20)).toList()}
+  ''');
 }
 
 void assertMap<T, U>(Map<T, U> a, Map<T, U> b) {
@@ -57,8 +67,8 @@ extension ChunkedList<T> on List<T> {
   }
 }
 
-extension UserExt on User {
-  UserProfile toProfile() => UserProfile(
+extension UserExt on us.User {
+  us.UserProfile toProfile() => us.UserProfile(
     userId: userId,
     username: username,
     role: role,
@@ -67,7 +77,7 @@ extension UserExt on User {
   );
 }
 
-extension VerifyEmailResponseExt on VerifyEmailResponse {
+extension VerifyEmailResponseExt on us.VerifyEmailResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -78,7 +88,7 @@ extension VerifyEmailResponseExt on VerifyEmailResponse {
   }
 }
 
-extension CreateUserResponseExt on CreateUserResponse {
+extension CreateResponseExt on us.CreateResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -89,7 +99,7 @@ extension CreateUserResponseExt on CreateUserResponse {
   }
 }
 
-extension UserExistsResponseExt on UserExistsResponse {
+extension ExistsResponseExt on us.ExistsResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -100,7 +110,7 @@ extension UserExistsResponseExt on UserExistsResponse {
   }
 }
 
-extension GetUserResponseExt on GetUserResponse {
+extension GetUsersResponseExt on us.GetResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -110,15 +120,28 @@ extension GetUserResponseExt on GetUserResponse {
     assert(error.code == code, 'Expected error $code, but found $error');
   }
 
-  void assertUser(UserProfile user) => assertValues(<(Object, Object)>[
-    (user.userId, this.user.userId),
-    (user.username, this.user.username),
-    (user.role, this.user.role),
-    (user.icon, this.user.icon),
-  ]);
+  void assertUsers(List<us.UserProfile> users) {
+    assert(
+      users.length == this.users.length,
+      'Expected ${this.users.length} users, but found ${users.length}',
+    );
+
+    for (final us.UserProfile user in users) {
+      final us.UserProfile? thisUser = this.users[user.userId];
+
+      assert(thisUser != null, 'User ${user.userId} not found');
+
+      assertValues(<(Object, Object)>[
+        (user.userId, thisUser!.userId),
+        (user.username, thisUser.username),
+        (user.role, thisUser.role),
+        (user.icon, thisUser.icon),
+      ]);
+    }
+  }
 }
 
-extension AuthUserResponseExt on AuthUserResponse {
+extension AuthResponseExt on us.AuthResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -128,7 +151,7 @@ extension AuthUserResponseExt on AuthUserResponse {
     assert(error.code == code, 'Expected error $code, but found $error');
   }
 
-  void assertUser(User user) => assertValues(<(Object, Object)>[
+  void assertUser(us.User user) => assertValues(<(Object, Object)>[
     (user.userId, this.user.userId),
     (user.username, this.user.username),
     (user.email, this.user.email),
@@ -137,7 +160,7 @@ extension AuthUserResponseExt on AuthUserResponse {
   ]);
 }
 
-extension UpdateUserResponseExt on UpdateUserResponse {
+extension UpdateResponseExt on us.UpdateResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -148,7 +171,7 @@ extension UpdateUserResponseExt on UpdateUserResponse {
   }
 }
 
-extension SearchUsersResponseExt on SearchUsersResponse {
+extension SearchUsersResponseExt on us.SearchResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -160,13 +183,13 @@ extension SearchUsersResponseExt on SearchUsersResponse {
 
   void assertContains(String userId) {
     assert(
-      users.any((UserProfile user) => user.userId == userId),
+      users.any((us.UserProfile user) => user.userId == userId),
       'Expected user $userId, but none was found',
     );
   }
 }
 
-extension BlockUserResponseExt on BlockUserResponse {
+extension BlockResponseExt on us.BlockResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -177,7 +200,7 @@ extension BlockUserResponseExt on BlockUserResponse {
   }
 }
 
-extension IsBlockedResponseExt on IsBlockedResponse {
+extension IsBlockedResponseExt on us.IsBlockedResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -195,7 +218,7 @@ extension IsBlockedResponseExt on IsBlockedResponse {
   }
 }
 
-extension DeleteUserResponseExt on DeleteUserResponse {
+extension FollowResponseExt on us.FollowResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -206,7 +229,7 @@ extension DeleteUserResponseExt on DeleteUserResponse {
   }
 }
 
-extension UploadResponseExt on UploadResponse {
+extension DeleteResponseExt on us.DeleteResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -217,7 +240,18 @@ extension UploadResponseExt on UploadResponse {
   }
 }
 
-extension GetResourceMetaResponseExt on GetResourceMetaResponse {
+extension UploadResponseExt on res.UploadResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+}
+
+extension MetaResponseExt on res.MetaResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -227,22 +261,34 @@ extension GetResourceMetaResponseExt on GetResourceMetaResponse {
     assert(error.code == code, 'Expected error $code, but found $error');
   }
 
-  void assertMeta(ResourceMeta meta) => assertValues(<(Object, Object)>[
-    (meta.size, this.meta.size),
-    (meta.name, this.meta.name),
-    (meta.metadata, this.meta.metadata),
-  ]);
+  void assertMetas(List<res.ResourceMeta> metas) {
+    assert(
+      metas.length == this.metas.length,
+      'Expected ${metas.length} metas, but found ${this.metas.length}',
+    );
+
+    for (final (int, res.ResourceMeta) val in metas.indexed) {
+      final res.ResourceMeta meta = val.$2;
+      final res.ResourceMeta thisMeta = this.metas[val.$1];
+
+      assertValues(<(Object, Object)>[
+        (meta.size, thisMeta.size),
+        (meta.name, thisMeta.name),
+        (meta.metadata, thisMeta.metadata),
+      ]);
+    }
+  }
 }
 
-extension DownloadResponseExt on List<DownloadResponse> {
+extension DownloadResponseExt on List<res.DownloadResponse> {
   void assertSuccess() {
-    for (final DownloadResponse resp in this) {
+    for (final res.DownloadResponse resp in this) {
       assert(!resp.hasError(), 'Failed Operation: ${resp.error}');
     }
   }
 
   void assertError(ErrorCode code) {
-    for (final DownloadResponse resp in this) {
+    for (final res.DownloadResponse resp in this) {
       assert(resp.hasError(), 'Expected error, but none was found');
       assert(
         resp.error.code == code,
@@ -251,8 +297,8 @@ extension DownloadResponseExt on List<DownloadResponse> {
     }
   }
 
-  void assertMeta(ResourceMeta meta) {
-    final ResourceMeta thisMeta = this.first.meta;
+  void assertMeta(res.ResourceMeta meta) {
+    final res.ResourceMeta thisMeta = this.first.meta;
 
     assertValues(<(Object, Object)>[
       (meta.size, thisMeta.size),
@@ -264,7 +310,7 @@ extension DownloadResponseExt on List<DownloadResponse> {
   void assertData(List<int> data) {
     final List<int> thisData = List<int>.empty(growable: true);
 
-    for (final DownloadResponse resp in this) {
+    for (final res.DownloadResponse resp in this) {
       if (resp.hasData()) {
         thisData.addAll(resp.data);
       }
@@ -274,7 +320,7 @@ extension DownloadResponseExt on List<DownloadResponse> {
   }
 }
 
-extension CreateChannelResponseExt on CreateChannelResponse {
+extension CreateChannelResponseExt on ch.CreateChannelResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -287,7 +333,7 @@ extension CreateChannelResponseExt on CreateChannelResponse {
   void assertChannel({
     required String name,
     required String description,
-    required Map<String, ChannelPermission> members,
+    required Map<String, ch.ChannelPermission> members,
   }) {
     assertValues(<(Object, Object)>[
       (name, this.channel.name),
@@ -298,7 +344,7 @@ extension CreateChannelResponseExt on CreateChannelResponse {
   }
 }
 
-extension InviteChannelResponseExt on InviteChannelResponse {
+extension InviteChannelResponseExt on ch.InviteResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -309,7 +355,7 @@ extension InviteChannelResponseExt on InviteChannelResponse {
   }
 }
 
-extension SetUserPermResponseExt on SetUserPermResponse {
+extension SetUserPermResponseExt on ch.SetUserPermResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -320,7 +366,7 @@ extension SetUserPermResponseExt on SetUserPermResponse {
   }
 }
 
-extension DeleteChannelResponseExt on DeleteChannelResponse {
+extension DeleteChannelResponseExt on ch.DeleteChannelResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -331,7 +377,7 @@ extension DeleteChannelResponseExt on DeleteChannelResponse {
   }
 }
 
-extension SendMessageResponseExt on SendMessageResponse {
+extension SendMessageResponseExt on ch.SendResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -344,7 +390,7 @@ extension SendMessageResponseExt on SendMessageResponse {
   void assertMessage({
     required String user_id,
     required String channel_id,
-    required Content content,
+    required res.Content content,
   }) {
     assertValues(<(Object, Object)>[
       (user_id, this.message.userId),
@@ -354,7 +400,7 @@ extension SendMessageResponseExt on SendMessageResponse {
   }
 }
 
-extension ReadMessageResponseExt on ReadMessagesResponse {
+extension ReadMessageResponseExt on ch.ReadResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -364,8 +410,8 @@ extension ReadMessageResponseExt on ReadMessagesResponse {
     assert(error.code == code, 'Expected error $code, but found $error');
   }
 
-  void assertMessage(Message message) {
-    final Message thisMessage = this.messages.first;
+  void assertMessage(ch.Message message) {
+    final ch.Message thisMessage = this.messages.first;
 
     assertValues(<(Object, Object)>[
       (message.messageId, thisMessage.messageId),
@@ -377,7 +423,7 @@ extension ReadMessageResponseExt on ReadMessagesResponse {
   }
 }
 
-extension DeleteMessageResponseExt on DeleteMessageResponse {
+extension DeleteMessageResponseExt on ch.DeleteMessageResponse {
   void assertSuccess() {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
@@ -385,5 +431,177 @@ extension DeleteMessageResponseExt on DeleteMessageResponse {
   void assertError(ErrorCode code) {
     assert(hasError(), 'Expected error, but none was found');
     assert(error.code == code, 'Expected error $code, but found $error');
+  }
+}
+
+extension PublishResponseExt on ps.PublishResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+
+  void assertPost({
+    required String authorId,
+    required String content,
+    required String? parent,
+  }) {
+    assertValues(<(Object, Object)>[
+      (authorId, this.post.authorId),
+      (content, this.post.content.text),
+    ]);
+
+    if (parent != null) {
+      assert(this.post.hasParent(), 'Expected parent, but none was found');
+      assert(
+        parent == this.post.parent,
+        'Expected parent $parent, but found ${this.post.parent}',
+      );
+    } else {
+      assert(!this.post.hasParent(), 'Expected no parent, but found one');
+    }
+  }
+}
+
+extension UnpublishResponseExt on ps.UnpublishResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+}
+
+extension GetPostsResponseExt on ps.GetResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+
+  void assertPosts(List<ps.Post> posts) {
+    assert(
+      posts.length == this.posts.length,
+      'Expected ${this.posts.length} posts, but found ${posts.length}',
+    );
+
+    for (final ps.Post post in posts) {
+      final ps.Post? thisPost = this.posts[post.postId];
+
+      assert(thisPost != null, 'Post ${post.postId} not found');
+
+      assertValues(<(Object, Object)>[
+        (post.authorId, thisPost!.authorId),
+        (post.content.text, thisPost.content.text),
+        (post.parent, thisPost.parent),
+        (post.timestamp, thisPost.timestamp),
+        (post.reaction, thisPost.reaction),
+      ]);
+
+      assertMap(post.reactions, thisPost.reactions);
+    }
+  }
+}
+
+extension GetOfResponseExt on ps.GetOfResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+
+  void assertPosts(List<ps.Post> posts) {
+    assert(
+      posts.length == this.posts.length,
+      'Expected ${this.posts.length} posts, but found ${posts.length}',
+    );
+
+    for (final (int, ps.Post) val in posts.indexed) {
+      final ps.Post post = val.$2;
+      final ps.Post thisPost = this.posts[val.$1];
+
+      assertValues(<(Object, Object)>[
+        (post.authorId, thisPost.authorId),
+        (post.content.text, thisPost.content.text),
+        (post.parent, thisPost.parent),
+        (post.timestamp, thisPost.timestamp),
+        (post.reaction, thisPost.reaction),
+      ]);
+
+      assertMap(post.reactions, thisPost.reactions);
+    }
+  }
+}
+
+extension ReactResponseExt on ps.ReactResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+}
+
+extension SearchPostsResponseExt on ps.SearchResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+
+  void assertPosts(List<ps.Post> posts) {
+    assert(
+      posts.length == this.posts.length,
+      'Expected ${this.posts.length} posts, but found ${posts.length}',
+    );
+
+    for (final (int, ps.Post) val in posts.indexed) {
+      final ps.Post post = val.$2;
+      final ps.Post thisPost = this.posts[val.$1];
+
+      assertValues(<(Object, Object)>[
+        (post.authorId, thisPost.authorId),
+        (post.content.text, thisPost.content.text),
+        (post.parent, thisPost.parent),
+        (post.timestamp, thisPost.timestamp),
+        (post.reaction, thisPost.reaction),
+      ]);
+
+      assertMap(post.reactions, thisPost.reactions);
+    }
+  }
+}
+
+extension FeedResponseExt on ps.FeedResponse {
+  void assertSuccess() {
+    assert(!hasError(), 'Failed Operation: ${error}');
+  }
+
+  void assertError(ErrorCode code) {
+    assert(hasError(), 'Expected error, but none was found');
+    assert(error.code == code, 'Expected error $code, but found $error');
+  }
+
+  void assertContains(String postId) {
+    assert(
+      this.postIds.contains(postId),
+      'Post $postId not found. Posts: ${this.postIds}',
+    );
   }
 }

@@ -1,4 +1,6 @@
-import 'package:aura_dart/aura_dart.dart';
+import 'package:aura_dart/chat.dart';
+import 'package:aura_dart/common.dart';
+import 'package:aura_dart/resource.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
@@ -6,8 +8,8 @@ import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 class MessagesTest implements Test {
   @override
   Set<String> get coveredMethods => <String>{
-    'ChatService/SendMessage',
-    'ChatService/ReadMessages',
+    'ChatService/Send',
+    'ChatService/Read',
     'ChatService/DeleteMessage',
   };
 
@@ -44,8 +46,8 @@ class MessagesTest implements Test {
           ..assertSuccess();
 
     // Try to send message with read-only permission
-    await context.chat.sendMessage(
-        SendMessageRequest(
+    await context.chat.send(
+        SendRequest(
           channelId: createChannelResponse.channel.channelId,
           content: Content(text: 'Hello World!'),
         ),
@@ -54,9 +56,9 @@ class MessagesTest implements Test {
       ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
 
     // Send message with read-write permission
-    final SendMessageResponse sendMessageResponse =
-        await context.chat.sendMessage(
-            SendMessageRequest(
+    final SendResponse sendMessageResponse =
+        await context.chat.send(
+            SendRequest(
               channelId: createChannelResponse.channel.channelId,
               content: Content(text: 'Hello World!'),
             ),
@@ -70,8 +72,8 @@ class MessagesTest implements Test {
           );
 
     // Read message with read permission
-    await context.chat.readMessages(
-        ReadMessagesRequest(
+    await context.chat.read(
+        ReadRequest(
           channelId: createChannelResponse.channel.channelId,
           limit: 1,
           startTime: Timestamp.fromDateTime(DateTime.now()),

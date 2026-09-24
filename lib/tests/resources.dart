@@ -1,4 +1,6 @@
-import 'package:aura_dart/aura_dart.dart';
+import 'package:aura_dart/chat.dart';
+import 'package:aura_dart/common.dart';
+import 'package:aura_dart/resource.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
@@ -7,7 +9,7 @@ class ResourcesTest implements Test {
   @override
   Set<String> get coveredMethods => <String>{
     'ResourceService/Upload',
-    'ResourceService/GetResourceMeta',
+    'ResourceService/Meta',
     'ResourceService/Download',
   };
 
@@ -76,12 +78,12 @@ class ResourcesTest implements Test {
           ..assertSuccess();
 
     // Get Resource Meta with read-only permission
-    await context.resource.getResourceMeta(
-        GetResourceMetaRequest(resourceId: uploadResponse.resourceId),
+    await context.resource.meta(
+        MetaRequest(resourceId: <ResourceId>[uploadResponse.resourceId]),
         options: context.testUserOptions,
       )
       ..assertSuccess()
-      ..assertMeta(meta);
+      ..assertMetas(<ResourceMeta>[meta]);
 
     // Download Resource with read-only permission
     await (await context.resource.download(

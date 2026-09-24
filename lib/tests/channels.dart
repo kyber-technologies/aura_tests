@@ -1,4 +1,5 @@
-import 'package:aura_dart/aura_dart.dart';
+import 'package:aura_dart/chat.dart';
+import 'package:aura_dart/common.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 
@@ -6,7 +7,7 @@ class ChannelsTest implements Test {
   @override
   Set<String> get coveredMethods => <String>{
     'ChatService/CreateChannel',
-    'ChatService/InviteChannel',
+    'ChatService/Invite',
     'ChatService/SetUserPerm',
     'ChatService/DeleteChannel',
   };
@@ -56,8 +57,8 @@ class ChannelsTest implements Test {
           );
 
     // Invite user with insufficient permissions
-    await context.chat.inviteChannel(
-        InviteChannelRequest(
+    await context.chat.invite(
+        InviteRequest(
           userId: context.moderator.userId,
           channelId: createChannelResponse.channel.channelId,
           uninvite: false,
@@ -67,8 +68,8 @@ class ChannelsTest implements Test {
       ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
 
     // Invite user with sufficient permissions
-    await context.chat.inviteChannel(
-        InviteChannelRequest(
+    await context.chat.invite(
+        InviteRequest(
           userId: context.moderator.userId,
           channelId: createChannelResponse.channel.channelId,
           uninvite: false,
@@ -100,8 +101,8 @@ class ChannelsTest implements Test {
       ..assertSuccess();
 
     // Invite user with sufficient permissions
-    await context.chat.inviteChannel(
-      InviteChannelRequest(
+    await context.chat.invite(
+      InviteRequest(
         userId: context.testUser.userId,
         channelId: createChannelResponse.channel.channelId,
         uninvite: false,
@@ -131,8 +132,8 @@ class ChannelsTest implements Test {
       ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
 
     // Test user leaves channel
-    await context.chat.inviteChannel(
-        InviteChannelRequest(
+    await context.chat.invite(
+        InviteRequest(
           userId: context.testUser.userId,
           channelId: createChannelResponse.channel.channelId,
           uninvite: true,
@@ -142,8 +143,8 @@ class ChannelsTest implements Test {
       ..assertSuccess();
 
     // Uninvite moderator as admin
-    await context.chat.inviteChannel(
-        InviteChannelRequest(
+    await context.chat.invite(
+        InviteRequest(
           userId: context.moderator.userId,
           channelId: createChannelResponse.channel.channelId,
           uninvite: true,

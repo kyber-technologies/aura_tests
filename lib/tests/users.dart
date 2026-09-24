@@ -1,4 +1,6 @@
-import 'package:aura_dart/aura_dart.dart';
+import 'package:aura_dart/common.dart';
+import 'package:aura_dart/general.dart';
+import 'package:aura_dart/user.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:grpc/grpc.dart';
@@ -7,15 +9,16 @@ class UsersTest implements Test {
   @override
   Set<String> get coveredMethods => <String>{
     'UserService/VerifyEmail',
-    'UserService/CreateUser',
-    'UserService/UserExists',
-    'UserService/GetUser',
-    'UserService/AuthUser',
-    'UserService/UpdateUser',
-    'UserService/SearchUsers',
-    'UserService/BlockUser',
+    'UserService/Create',
+    'UserService/Exists',
+    'UserService/Get',
+    'UserService/Auth',
+    'UserService/Update',
+    'UserService/Search',
+    'UserService/Block',
     'UserService/IsBlocked',
-    'UserService/DeleteUser',
+    'UserService/Follow',
+    'UserService/Delete',
   };
 
   @override
@@ -36,7 +39,7 @@ class UsersTest implements Test {
     );
 
     // User should not exist
-    await context.user.userExists(UserExistsRequest(userId: user.userId))
+    await context.user.exists(ExistsRequest(userId: user.userId))
       ..assertError(ErrorCode.ERROR_CODE_NOT_FOUND);
 
     // Verify Email
@@ -45,8 +48,8 @@ class UsersTest implements Test {
     )).assertSuccess();
 
     // Create User with invalid Email Token
-    await context.user.createUser(
-        CreateUserRequest(
+    await context.user.create(
+        CreateRequest(
           userId: user.userId,
           username: user.username,
           email: user.email,
@@ -57,12 +60,12 @@ class UsersTest implements Test {
       ..assertError(ErrorCode.ERROR_CODE_UNAUTHORIZED);
 
     // TESTING: Get correct Email Token
-    final GetEmailTokenResponse getTokenResponse = await context.general
-        .getEmailToken(GetEmailTokenRequest(email: user.email));
+    final EmailTokenResponse getTokenResponse = await context.general
+        .emailToken(EmailTokenRequest(email: user.email));
 
     // Create User with correct Email Token
-    await context.user.createUser(
-        CreateUserRequest(
+    await context.user.create(
+        CreateRequest(
           userId: user.userId,
           username: user.username,
           email: user.email,
@@ -73,28 +76,29 @@ class UsersTest implements Test {
       ..assertSuccess();
 
     // User should exist
-    await context.user.userExists(UserExistsRequest(userId: user.userId))
+    await context.user.exists(ExistsRequest(userId: user.userId))
       ..assertSuccess();
 
     // Get non-existent User
-    await context.user.getUser(
-        GetUserRequest(userId: 'otherUser'),
+    await context.user.get(
+        GetRequest(userId: <String>['otherUser']),
         options: context.adminOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_NOT_FOUND);
+      // User not found
+      ..assertUsers(<UserProfile>[]);
 
     // Get existent User
-    await context.user.getUser(
-        GetUserRequest(userId: user.userId),
+    await context.user.get(
+        GetRequest(userId: <String>[user.userId]),
         options: context.adminOptions,
       )
       ..assertSuccess()
-      ..assertUser(user.toProfile());
+      ..assertUsers(<UserProfile>[user.toProfile()]);
 
     // Auth User
-    final AuthUserResponse authResponse =
-        await context.user.authUser(
-            AuthUserRequest(userId: user.userId, password: user.password),
+    final AuthResponse authResponse =
+        await context.user.auth(
+            AuthRequest(userId: user.userId, password: user.password),
           )
           ..assertSuccess()
           ..assertUser(user);
@@ -106,8 +110,8 @@ class UsersTest implements Test {
       ..username = 'Awesome User'
       ..email = 'awesome@aura.testing'
       ..password = 'awesome123';
-    await context.user.updateUser(
-        UpdateUserRequest(
+    await context.user.update(
+        UpdateRequest(
           username: user.username,
           email: user.email,
           password: user.password,
@@ -117,16 +121,16 @@ class UsersTest implements Test {
       ..assertSuccess();
 
     // Search for User
-    await context.user.searchUsers(
-        SearchUsersRequest(query: user.username),
+    await context.user.search(
+        SearchRequest(query: user.username, limit: 1),
         options: options,
       )
       ..assertSuccess()
       ..assertContains(user.userId);
 
     // Block User
-    await context.user.blockUser(
-        BlockUserRequest(userId: context.admin.userId, block: true),
+    await context.user.block(
+        BlockRequest(userId: context.admin.userId, block: true),
         options: options,
       )
       ..assertSuccess();
@@ -140,8 +144,8 @@ class UsersTest implements Test {
       ..assertBlocked(true);
 
     // Unblock User
-    await context.user.blockUser(
-        BlockUserRequest(userId: context.admin.userId, block: false),
+    await context.user.block(
+        BlockRequest(userId: context.admin.userId, block: false),
         options: options,
       )
       ..assertSuccess();
@@ -154,9 +158,23 @@ class UsersTest implements Test {
       ..assertSuccess()
       ..assertBlocked(false);
 
+    // Follow admin
+    await context.user.follow(
+        FollowRequest(userId: context.admin.userId, unfollow: false),
+        options: options,
+      )
+      ..assertSuccess();
+
+    // Unfollow admin
+    await context.user.follow(
+        FollowRequest(userId: context.admin.userId, unfollow: true),
+        options: options,
+      )
+      ..assertSuccess();
+
     // Delete User
-    await context.user.deleteUser(
-      DeleteUserRequest(password: user.password),
+    await context.user.delete(
+      DeleteRequest(password: user.password),
       options: options,
     );
   }

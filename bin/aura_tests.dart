@@ -1,7 +1,8 @@
-import 'package:aura_dart/aura_dart.dart';
+import 'package:aura_dart/general.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/tests/channels.dart';
 import 'package:aura_tests/tests/messages.dart';
+import 'package:aura_tests/tests/posting.dart';
 import 'package:aura_tests/tests/resources.dart';
 import 'package:aura_tests/tests/users.dart';
 
@@ -10,6 +11,7 @@ void main(List<String> args) async {
   registerTest(ResourcesTest());
   registerTest(ChannelsTest());
   registerTest(MessagesTest());
+  registerTest(PostingTest());
 
   final String? command = args.firstOrNull;
 
@@ -122,11 +124,11 @@ void printResults(final List<(Test, bool)> results, final bool all) {
     final Set<String> uncoveredMethods =
         registeredMethods.difference(coveredMethods)..removeAll(<Object?>[
           // Remove general methods that are never covered
-          'GeneralService/GetConfig',
+          'GeneralService/Config',
           'GeneralService/ClearState',
-          'GeneralService/GetEmailToken',
-          'GeneralService/GetServices',
-          'GeneralService/GetTestUsers',
+          'GeneralService/EmailToken',
+          'GeneralService/Services',
+          'GeneralService/TestUsers',
         ]);
 
     if (uncoveredMethods.isEmpty) {

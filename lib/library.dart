@@ -1,6 +1,10 @@
 import 'dart:io';
 
-import 'package:aura_dart/aura_dart.dart';
+import 'package:aura_dart/chat.dart';
+import 'package:aura_dart/general.dart';
+import 'package:aura_dart/posting.dart';
+import 'package:aura_dart/resource.dart';
+import 'package:aura_dart/user.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:grpc/grpc.dart';
 import 'package:logger/logger.dart';
@@ -29,7 +33,8 @@ class TestContext {
   late final UserServiceClient user;
   late final ChatServiceClient chat;
   late final ResourceServiceClient resource;
-  late final GetConfigResponse config;
+  late final PostingServiceClient posting;
+  late final ConfigResponse config;
 
   late final User testUser;
   late final CallOptions testUserOptions;
@@ -52,7 +57,6 @@ class TestContext {
     channel = ClientChannel(
       Platform.environment['GRPC_HOST'] ?? '127.0.0.1',
       port: int.parse(Platform.environment['GRPC_PORT'] ?? '50051'),
-      options: const ChannelOptions(credentials: ChannelCredentials.insecure()),
     );
 
     logger.d('Initializing general service...');
@@ -67,14 +71,15 @@ class TestContext {
     logger.d('Initializing resource service...');
     resource = ResourceServiceClient(channel);
 
+    logger.d('Initializing posting service...');
+    posting = PostingServiceClient(channel);
+
     logger.d('Clearing server state...');
     await general.clearState(ClearStateRequest());
 
     logger.d('Validating configuration...');
     {
-      final GetConfigResponse config = await general.getConfig(
-        GetConfigRequest(),
-      );
+      final ConfigResponse config = await general.config(ConfigRequest());
 
       assert(
         config.version == version,
@@ -87,8 +92,8 @@ class TestContext {
     if (registeredMethods.isEmpty) {
       logger.d('Fetching registered methods...');
 
-      final GetServicesResponse response = await general.getServices(
-        GetServicesRequest(),
+      final ServicesResponse response = await general.services(
+        ServicesRequest(),
       );
 
       for (final ServiceDescriptor service in response.services) {
@@ -100,8 +105,8 @@ class TestContext {
 
     logger.d('Requesting test user data...');
     {
-      final GetTestUsersResponse testUsers = await general.getTestUsers(
-        GetTestUsersRequest(),
+      final TestUsersResponse testUsers = await general.testUsers(
+        TestUsersRequest(),
       );
 
       admin = testUsers.admin;
@@ -111,8 +116,8 @@ class TestContext {
 
     logger.d('Authenticating as test user...');
     {
-      final AuthUserResponse response = await user.authUser(
-        AuthUserRequest(userId: testUser.userId, password: testUser.password),
+      final AuthResponse response = await user.auth(
+        AuthRequest(userId: testUser.userId, password: testUser.password),
       );
 
       if (response.hasError()) {
@@ -124,8 +129,8 @@ class TestContext {
 
     logger.d('Authenticating as moderator...');
     {
-      final AuthUserResponse response = await user.authUser(
-        AuthUserRequest(userId: moderator.userId, password: moderator.password),
+      final AuthResponse response = await user.auth(
+        AuthRequest(userId: moderator.userId, password: moderator.password),
       );
 
       if (response.hasError()) {
@@ -137,8 +142,8 @@ class TestContext {
 
     logger.d('Authenticating as admin...');
     {
-      final AuthUserResponse response = await user.authUser(
-        AuthUserRequest(userId: admin.userId, password: admin.password),
+      final AuthResponse response = await user.auth(
+        AuthRequest(userId: admin.userId, password: admin.password),
       );
 
       if (response.hasError()) {
