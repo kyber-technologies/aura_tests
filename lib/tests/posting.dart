@@ -3,6 +3,7 @@ import 'package:aura_dart/posting.dart';
 import 'package:aura_dart/resource.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
+import 'package:fixnum/fixnum.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
 
 class PostingTest implements Test {
@@ -55,7 +56,7 @@ class PostingTest implements Test {
 
     // Get post
     await context.posting.get(
-        GetRequest(posts: <String>[publishResponse.post.postId]),
+        GetRequest(posts: <Int64>[publishResponse.post.postId]),
         options: context.adminOptions,
       )
       ..assertSuccess()

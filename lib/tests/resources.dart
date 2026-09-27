@@ -51,7 +51,7 @@ class ResourcesTest implements Test {
         <UploadRequest>[
           UploadRequest(
             namespace: ResourceNamespace(
-              channel: createChannelResponse.channel.channelId,
+              channel: createChannelResponse.channel.channelId.toString(),
             ),
             meta: meta,
           ),

@@ -5,6 +5,7 @@ import 'package:aura_dart/common.dart';
 import 'package:aura_dart/posting.dart' as ps;
 import 'package:aura_dart/resource.dart' as res;
 import 'package:aura_dart/user.dart' as us;
+import 'package:fixnum/fixnum.dart';
 import 'package:grpc/grpc.dart';
 import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
 
@@ -389,7 +390,7 @@ extension SendMessageResponseExt on ch.SendResponse {
 
   void assertMessage({
     required String user_id,
-    required String channel_id,
+    required Int64 channel_id,
     required res.Content content,
   }) {
     assertValues(<(Object, Object)>[
@@ -447,7 +448,7 @@ extension PublishResponseExt on ps.PublishResponse {
   void assertPost({
     required String authorId,
     required String content,
-    required String? parent,
+    required Int64? parent,
   }) {
     assertValues(<(Object, Object)>[
       (authorId, this.post.authorId),
@@ -598,7 +599,7 @@ extension FeedResponseExt on ps.FeedResponse {
     assert(error.code == code, 'Expected error $code, but found $error');
   }
 
-  void assertContains(String postId) {
+  void assertContains(Int64 postId) {
     assert(
       this.postIds.contains(postId),
       'Post $postId not found. Posts: ${this.postIds}',
