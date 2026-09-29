@@ -38,7 +38,7 @@ packages:
     description:
       path: aura_dart
       ref: HEAD
-      resolved-ref: "36e19a1bac952e0062f7ed00fc57de4270bc7521"
+      resolved-ref: "1fec720116821672a2833f3ce248472058cab920"
       url: "https://github.com/kyber-technologies/aura_proto.git"
     source: git
     version: "1.0.0"
