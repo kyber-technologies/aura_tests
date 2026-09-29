@@ -71,6 +71,17 @@ class UsersTest implements Test {
           email: user.email,
           password: user.password,
           verificationToken: getTokenResponse.token,
+          settings: UserSettings(
+            resetAlgoTags: <String>['politics', 'sports'],
+            allowInvites: true,
+            algoLikeWeight: 0.6,
+            algoDislikeWeight: 0.4,
+            algoCommentWeight: 0.8,
+            algoTimeDecay: 0.6,
+            notifyInvite: true,
+            notifyMessage: true,
+            notifyComment: true,
+          ),
         ),
       )
       ..assertSuccess();
@@ -115,6 +126,17 @@ class UsersTest implements Test {
           username: user.username,
           email: user.email,
           password: user.password,
+          settings: UserSettings(
+            resetAlgoTags: <String>['politics', 'sports'],
+            allowInvites: true,
+            algoLikeWeight: 0.6,
+            algoDislikeWeight: 0.4,
+            algoCommentWeight: 0.8,
+            algoTimeDecay: 0.6,
+            notifyInvite: true,
+            notifyMessage: true,
+            notifyComment: true,
+          ),
         ),
         options: options,
       )
