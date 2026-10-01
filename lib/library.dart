@@ -74,6 +74,21 @@ class TestContext {
     logger.d('Initializing posting service...');
     posting = PostingServiceClient(channel);
 
+    logger.d('Checking server status...');
+    {
+      final StatusResponse status = await general.status(StatusRequest());
+
+      assert(status.testing, 'Server not in testing mode');
+      assert(
+        !status.hasError(),
+        'Failed to check server status: ${status.error}',
+      );
+      assert(
+        status.details['status'] == 'ok',
+        'Server returned invalid status',
+      );
+    }
+
     logger.d('Clearing server state...');
     await general.clearState(ClearStateRequest());
 

@@ -1,5 +1,4 @@
 import 'package:aura_dart/chat.dart';
-import 'package:aura_dart/common.dart';
 import 'package:aura_dart/resource.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
@@ -53,7 +52,7 @@ class MessagesTest implements Test {
         ),
         options: context.testUserOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
+      ..assertError(ErrorType.restricted);
 
     // Send message with read-write permission
     final SendResponse sendMessageResponse =
@@ -88,7 +87,7 @@ class MessagesTest implements Test {
         DeleteMessageRequest(messageId: sendMessageResponse.message.messageId),
         options: context.testUserOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
+      ..assertError(ErrorType.restricted);
 
     // Delete message with sufficient permission
     await context.chat.deleteMessage(

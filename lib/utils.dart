@@ -9,6 +9,8 @@ import 'package:fixnum/fixnum.dart';
 import 'package:grpc/grpc.dart';
 import 'package:protobuf/well_known_types/google/protobuf/empty.pb.dart';
 
+typedef ErrorType = Error_Type;
+
 final res.ResourceId defaultIconResource = res.ResourceId(
   namespace: res.ResourceNamespace(aura: Empty()),
   key: 'default_icon.png',
@@ -83,9 +85,9 @@ extension VerifyEmailResponseExt on us.VerifyEmailResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -94,9 +96,9 @@ extension CreateResponseExt on us.CreateResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -105,9 +107,9 @@ extension ExistsResponseExt on us.ExistsResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -116,9 +118,9 @@ extension GetUsersResponseExt on us.GetResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertUsers(List<us.UserProfile> users) {
@@ -147,9 +149,9 @@ extension AuthResponseExt on us.AuthResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertUser(us.User user) => assertValues(<(Object, Object)>[
@@ -166,9 +168,9 @@ extension UpdateResponseExt on us.UpdateResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -177,9 +179,9 @@ extension SearchUsersResponseExt on us.SearchResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertContains(String userId) {
@@ -195,9 +197,9 @@ extension BlockResponseExt on us.BlockResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -206,9 +208,9 @@ extension IsBlockedResponseExt on us.IsBlockedResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertBlocked(bool blocked) {
@@ -224,9 +226,9 @@ extension FollowResponseExt on us.FollowResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -235,9 +237,9 @@ extension DeleteResponseExt on us.DeleteResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -246,9 +248,9 @@ extension UploadResponseExt on res.UploadResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -257,9 +259,9 @@ extension MetaResponseExt on res.MetaResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertMetas(List<res.ResourceMeta> metas) {
@@ -288,12 +290,12 @@ extension DownloadResponseExt on List<res.DownloadResponse> {
     }
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     for (final res.DownloadResponse resp in this) {
       assert(resp.hasError(), 'Expected error, but none was found');
       assert(
-        resp.error.code == code,
-        'Expected error $code, but found ${resp.error}',
+        resp.error.whichType() == ty,
+        'Expected error $ty, but found ${resp.error}',
       );
     }
   }
@@ -326,9 +328,9 @@ extension CreateChannelResponseExt on ch.CreateChannelResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertChannel({
@@ -350,9 +352,9 @@ extension InviteChannelResponseExt on ch.InviteResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -361,9 +363,9 @@ extension SetUserPermResponseExt on ch.SetUserPermResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -372,9 +374,9 @@ extension DeleteChannelResponseExt on ch.DeleteChannelResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -383,9 +385,9 @@ extension SendMessageResponseExt on ch.SendResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertMessage({
@@ -406,9 +408,9 @@ extension ReadMessageResponseExt on ch.ReadResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertMessage(ch.Message message) {
@@ -429,9 +431,9 @@ extension DeleteMessageResponseExt on ch.DeleteMessageResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -440,9 +442,9 @@ extension PublishResponseExt on ps.PublishResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertPost({
@@ -472,9 +474,9 @@ extension UnpublishResponseExt on ps.UnpublishResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -483,9 +485,9 @@ extension GetPostsResponseExt on ps.GetResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertPosts(List<ps.Post> posts) {
@@ -507,6 +509,8 @@ extension GetPostsResponseExt on ps.GetResponse {
         (post.reaction, thisPost.reaction),
       ]);
 
+      assertList(post.comments, thisPost.comments);
+
       assertMap(post.reactions, thisPost.reactions);
     }
   }
@@ -517,9 +521,9 @@ extension GetOfResponseExt on ps.GetOfResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertPosts(List<ps.Post> posts) {
@@ -550,9 +554,9 @@ extension ReactResponseExt on ps.ReactResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 }
 
@@ -561,9 +565,9 @@ extension SearchPostsResponseExt on ps.SearchResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertPosts(List<ps.Post> posts) {
@@ -594,9 +598,9 @@ extension FeedResponseExt on ps.FeedResponse {
     assert(!hasError(), 'Failed Operation: ${error}');
   }
 
-  void assertError(ErrorCode code) {
+  void assertError(ErrorType ty) {
     assert(hasError(), 'Expected error, but none was found');
-    assert(error.code == code, 'Expected error $code, but found $error');
+    assert(error.whichType() == ty, 'Expected error $ty, but found $error');
   }
 
   void assertContains(Int64 postId) {

@@ -1,4 +1,3 @@
-import 'package:aura_dart/common.dart';
 import 'package:aura_dart/general.dart';
 import 'package:aura_dart/user.dart';
 import 'package:aura_tests/library.dart';
@@ -40,7 +39,7 @@ class UsersTest implements Test {
 
     // User should not exist
     await context.user.exists(ExistsRequest(userId: user.userId))
-      ..assertError(ErrorCode.ERROR_CODE_NOT_FOUND);
+      ..assertError(ErrorType.notFound);
 
     // Verify Email
     (await context.user.verifyEmail(
@@ -57,7 +56,7 @@ class UsersTest implements Test {
           verificationToken: 'HelloWorld',
         ),
       )
-      ..assertError(ErrorCode.ERROR_CODE_UNAUTHORIZED);
+      ..assertError(ErrorType.unauthorized);
 
     // TESTING: Get correct Email Token
     final EmailTokenResponse getTokenResponse = await context.general

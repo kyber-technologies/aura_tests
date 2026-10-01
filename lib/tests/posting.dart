@@ -1,4 +1,3 @@
-import 'package:aura_dart/common.dart';
 import 'package:aura_dart/posting.dart';
 import 'package:aura_dart/resource.dart';
 import 'package:aura_tests/library.dart';
@@ -15,7 +14,7 @@ class PostingTest implements Test {
     'PostingService/Search',
     'PostingService/React',
     'PostingService/Feed',
-    'PostingService/Unpublish'
+    'PostingService/Unpublish',
   };
 
   @override
@@ -40,19 +39,22 @@ class PostingTest implements Test {
           );
 
     // Publish comment by admin
-    await context.posting.publish(
-        PublishRequest(
-          content: Content(text: 'Hello to you too!'),
-          parent: publishResponse.post.postId,
-        ),
-        options: context.adminOptions,
-      )
-      ..assertSuccess()
-      ..assertPost(
-        authorId: context.admin.userId,
-        content: 'Hello to you too!',
-        parent: publishResponse.post.postId,
-      );
+    final PublishResponse commentResponse =
+        await context.posting.publish(
+            PublishRequest(
+              content: Content(text: 'Hello to you too!'),
+              parent: publishResponse.post.postId,
+            ),
+            options: context.adminOptions,
+          )
+          ..assertSuccess()
+          ..assertPost(
+            authorId: context.admin.userId,
+            content: 'Hello to you too!',
+            parent: publishResponse.post.postId,
+          );
+
+    publishResponse.post.comments.add(commentResponse.post.postId);
 
     // Get post
     await context.posting.get(
@@ -109,7 +111,7 @@ class PostingTest implements Test {
         UnpublishRequest(postId: publishResponse.post.postId),
         options: context.adminOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
+      ..assertError(ErrorType.restricted);
 
     // Unpublish root post
     await context.posting.unpublish(

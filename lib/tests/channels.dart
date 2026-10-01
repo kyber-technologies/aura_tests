@@ -1,5 +1,4 @@
 import 'package:aura_dart/chat.dart';
-import 'package:aura_dart/common.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 
@@ -65,7 +64,7 @@ class ChannelsTest implements Test {
         ),
         options: context.testUserOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
+      ..assertError(ErrorType.restricted);
 
     // Invite user with sufficient permissions
     await context.chat.invite(
@@ -87,7 +86,7 @@ class ChannelsTest implements Test {
         ),
         options: context.testUserOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
+      ..assertError(ErrorType.restricted);
 
     // Set permission of test user by admin (sufficient permissions)
     await context.chat.setUserPerm(
@@ -129,7 +128,7 @@ class ChannelsTest implements Test {
         ),
         options: context.testUserOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
+      ..assertError(ErrorType.restricted);
 
     // Test user leaves channel
     await context.chat.invite(

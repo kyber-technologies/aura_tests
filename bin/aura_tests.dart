@@ -125,6 +125,7 @@ void printResults(final List<(Test, bool)> results, final bool all) {
         registeredMethods.difference(coveredMethods)..removeAll(<Object?>[
           // Remove general methods that are never covered
           'GeneralService/Config',
+          'GeneralService/Status',
           'GeneralService/ClearState',
           'GeneralService/EmailToken',
           'GeneralService/Services',

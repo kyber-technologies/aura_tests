@@ -1,5 +1,4 @@
 import 'package:aura_dart/chat.dart';
-import 'package:aura_dart/common.dart';
 import 'package:aura_dart/resource.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
@@ -67,7 +66,7 @@ class ResourcesTest implements Test {
         Stream<UploadRequest>.fromIterable(uploads),
         options: context.testUserOptions,
       )
-      ..assertError(ErrorCode.ERROR_CODE_RESTRICTED);
+      ..assertError(ErrorType.restricted);
 
     // Upload with write permission
     final UploadResponse uploadResponse =
