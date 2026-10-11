@@ -1,5 +1,6 @@
 import 'package:aura_dart/chat.dart';
 import 'package:aura_dart/resource.dart';
+import 'package:aura_tests/ext/chat.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
@@ -65,8 +66,8 @@ class MessagesTest implements Test {
           )
           ..assertSuccess()
           ..assertMessage(
-            user_id: context.moderator.userId,
-            channel_id: createChannelResponse.channel.channelId,
+            userId: context.moderator.userId,
+            channelId: createChannelResponse.channel.channelId,
             content: Content(text: 'Hello World!'),
           );
 

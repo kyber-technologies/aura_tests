@@ -1,4 +1,5 @@
 import 'package:aura_dart/chat.dart';
+import 'package:aura_tests/ext/chat.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 

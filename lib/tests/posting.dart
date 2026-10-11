@@ -1,5 +1,6 @@
 import 'package:aura_dart/posting.dart';
 import 'package:aura_dart/resource.dart';
+import 'package:aura_tests/ext/posting.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:fixnum/fixnum.dart';

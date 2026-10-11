@@ -1,5 +1,6 @@
 import 'package:aura_dart/general.dart';
 import 'package:aura_dart/user.dart';
+import 'package:aura_tests/ext/user.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:grpc/grpc.dart';

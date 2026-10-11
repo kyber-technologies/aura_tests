@@ -1,5 +1,7 @@
 import 'package:aura_dart/chat.dart';
 import 'package:aura_dart/resource.dart';
+import 'package:aura_tests/ext/chat.dart';
+import 'package:aura_tests/ext/resource.dart';
 import 'package:aura_tests/library.dart';
 import 'package:aura_tests/utils.dart';
 import 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';
