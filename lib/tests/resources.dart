@@ -27,7 +27,9 @@ class ResourcesTest implements Test {
     final ResourceMeta meta = ResourceMeta(
       size: size,
       timestamp: Timestamp(),
-      name: 'test.data',
+      name: 'test.pdf',
+      // TODO: More format testing
+      format: 'pdf',
       metadata: <MapEntry<String, String>>{},
     );
 
