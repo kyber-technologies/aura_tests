@@ -43,9 +43,8 @@ class UsersTest implements Test {
       ..assertError(ErrorType.notFound);
 
     // Verify Email
-    (await context.user.verifyEmail(
-      VerifyEmailRequest(email: user.email),
-    )).assertSuccess();
+    await context.user.verifyEmail(VerifyEmailRequest(email: user.email))
+      ..assertSuccess();
 
     // Create User with invalid Email Token
     await context.user.create(
@@ -121,10 +120,20 @@ class UsersTest implements Test {
       ..username = 'Awesome User'
       ..email = 'awesome@aura.testing'
       ..password = 'awesome123';
+
+    // Re-verify new Email
+    await context.user.verifyEmail(VerifyEmailRequest(email: user.email))
+      ..assertSuccess();
+
+    final String token = (await context.general.emailToken(
+      EmailTokenRequest(email: user.email),
+    )).token;
+
     await context.user.update(
         UpdateRequest(
           username: user.username,
           email: user.email,
+          token: token,
           password: user.password,
           settings: UserSettings(
             resetAlgoTags: <String>['politics', 'sports'],
